@@ -1,0 +1,39 @@
+name: path
+
+on:
+  workflow_dispatch: 
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+       - name: Checkout repository
+         uses: actions/checkout@v2
+       - name: Checkout submodules
+         run: git submodule update --init --recursive
+       - name: Install NDK
+         run: echo "y" | sudo /usr/local/lib/android/sdk/tools/bin/sdkmanager --install "ndk;21.0.6113669" --sdk_root=$ANDROID_SDK_ROOT
+      
+
+      
+       - name: Build Release APK
+         run: |
+          chmod +x ./gradlew
+          ./gradlew assembleRelease
+          
+       - name: Get Date
+         id: date
+         run: echo "::set-output name=date::$(date +'%Y-%m-%dT%H-%M-%S')"
+
+       - name: Create Release
+         id: create_release
+         uses: actions/create-release@v1
+         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+         with:
+          tag_name: ludere-${{ steps.date.outputs.date }}
+          release_name: Ludere ${{ steps.date.outputs.date }}
+       - name: get apk name
+         run: find /home/runner/work/ -name "*.apk"
+       
+          
